@@ -14,10 +14,10 @@ Calendrier de mon programme de musculation, pensé pour le téléphone.
 
 ## Utilisation
 
-1. Ouvrir la page : https://smaylis13.github.io/muscu/
-2. Toucher un jour pour voir son programme.
-3. Toucher **Modifier** et saisir un exercice par ligne, par exemple `Développé couché 4x8 80 kg`.
-4. Toucher **Enregistrer**.
+1. Ouvrir la page : https://smaylis13.github.io/Muscu/
+3. Toucher un jour pour voir son programme.
+4. Toucher **Modifier** et saisir un exercice par ligne, par exemple `Développé couché 4x8 80 kg`.
+5. Toucher **Enregistrer**.
 
 ## Données
 
