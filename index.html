@@ -5,59 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Programme muscu</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#EDF0F2;--surface:#fff;--ink:#1B2127;--mute:#6B7680;--line:#D5DBE0;--acc:#2B59FF;--acc-ink:#fff;--soft:#E3EAFF;--danger:#C23B22;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181C;--surface:#1D2329;--ink:#EEF1F3;--mute:#939EA8;--line:#2D353C;--acc:#6C8CFF;--acc-ink:#0F1520;--soft:#232C44;--danger:#FF7A62}}
-:root[data-theme="dark"]{--bg:#14181C;--surface:#1D2329;--ink:#EEF1F3;--mute:#939EA8;--line:#2D353C;--acc:#6C8CFF;--acc-ink:#0F1520;--soft:#232C44;--danger:#FF7A62}
-*{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html,body{height:100%}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Barlow,system-ui,sans-serif}
-main{height:100%;max-width:560px;margin:0 auto;padding:10px 8px;display:flex;flex-direction:column;touch-action:pan-y}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-h1{font:700 30px/1 'Barlow Condensed',Impact,sans-serif;margin:0;text-transform:capitalize}
-.nav{display:flex;gap:8px}
-button{font:inherit;color:inherit;cursor:pointer}
-.ic{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px}
-.dow,.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-.grid{flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}#exp{width:auto;padding:0 14px;border-radius:22px;font-weight:500;font-size:15px}.dow{margin-bottom:6px}.dow span{background:var(--ink);color:var(--bg);border-radius:8px;padding:7px 0;font:700 17px/1 'Barlow Condensed',Impact,sans-serif;text-align:center}
-.cell{min-height:0;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);text-align:left;display:flex;flex-direction:column;gap:2px;overflow:hidden}
-.cell.out{opacity:.4}
-.cell.has{background:var(--soft);border-color:var(--acc)}
-.cell.today .n{background:var(--acc);color:var(--acc-ink);border-radius:50%}
-.n{font-weight:700;font-size:14px;width:24px;height:24px;display:grid;place-items:center}
-.t{flex:none;font-size:11px;line-height:1.25;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cell:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.veil{position:fixed;inset:0;background:rgba(10,14,18,.55);display:none;align-items:flex-end;justify-content:center;z-index:20}
-.veil.on{display:flex}
-.sheet{width:100%;max-width:560px;max-height:90%;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));animation:up .2s ease-out}
-@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
-.sheet h2{font:700 26px/1.1 'Barlow Condensed',Impact,sans-serif;margin:0 0 2px;text-transform:capitalize}
-.sub{color:var(--mute);margin:0 0 16px}
-.ex{list-style:none;margin:0 0 20px;padding:0}
-.ex li{padding:12px 0;border-top:1px solid var(--line);font-size:18px}
-.empty{padding:20px 0;color:var(--mute)}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.btn{min-height:48px;padding:0 20px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:500}
-.btn.main{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.btn.del{color:var(--danger)}
-label{display:block;font-weight:500;margin:0 0 6px}
-input,textarea{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
-textarea{min-height:170px;resize:vertical}
-.hint{color:var(--mute);font-size:14px;margin:-8px 0 14px}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
   <header>
     <h1 id="mois"></h1>
     <div class="nav">
+      <button class="ic" id="today">Aujourd’hui</button>
       <button class="ic" id="exp" hidden>Exporter</button>
       <button class="ic" id="prev" aria-label="Mois précédent">‹</button>
       <button class="ic" id="next" aria-label="Mois suivant">›</button>
     </div>
   </header>
+  <div id="bn" hidden><span>Touche le jour où copier</span><button id="bn-x">Annuler</button></div>
   <div class="dow"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span></div>
   <div class="grid" id="grid"></div>
 </main>
@@ -66,117 +27,7 @@ textarea{min-height:170px;resize:vertical}
   <div class="sheet" id="sheet"></div>
 </div>
 
-<script>
-const MOIS_NOMS=null;
-let data={};
-try{data=JSON.parse(localStorage.getItem('muscu-prog')||'{}')}catch(e){data={}}
-function save(){try{localStorage.setItem('muscu-prog',JSON.stringify(data))}catch(e){}}
-const $=id=>document.getElementById(id);
-const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let cur=new Date();cur.setDate(1);
-let openKey=null;
-
-const lines=p=>(p.exos||'').split('\n').map(s=>s.trim()).filter(Boolean);
-function render(){
-  $('mois').textContent=cur.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  const first=new Date(cur.getFullYear(),cur.getMonth(),1);
-  const off=(first.getDay()+6)%7;const start=new Date(first);start.setDate(off>=5?1+(7-off):1-off);
-  const todayK=key(new Date());
-  let h='';
-  for(let i=0;i<42;i++){
-    const d=new Date(start);d.setDate(start.getDate()+i);
-    if(d.getDay()===0||d.getDay()===6)continue;
-    if(i>0&&i%7===0&&d.getMonth()!==cur.getMonth())break;
-    const k=key(d),p=data[k];
-    const cls=['cell',d.getMonth()!==cur.getMonth()?'out':'',p?'has':'',k===todayK?'today':''].join(' ');
-    h+=`<button class="${cls}" data-k="${k}" aria-label="${d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}${p?' : programme prévu':''}"><span class="n">${d.getDate()}</span>${p?lines(p).map(l=>`<span class="t">${esc(l)}</span>`).join(''):''}</button>`;
-  }
-  $('grid').innerHTML=h;
-}
-
-function dateLabel(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
-
-function showView(k){
-  openKey=k;const p=data[k];
-  const exos=p?p.exos.split('\n').map(s=>s.trim()).filter(Boolean):[];
-  $('sheet').innerHTML=`<h2 id="sd">${dateLabel(k)}</h2>
-  <p class="sub">${p?'Programme du jour':'Pas de séance prévue'}</p>
-  ${exos.length?`<ul class="ex">${exos.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:'<p class="empty">Aucun exercice pour ce jour.</p>'}
-  <div class="row"><button class="btn main" id="edit">${p?'Modifier':'Ajouter un programme'}</button><button class="btn" id="close">Fermer</button></div>`;
-  $('edit').onclick=()=>showEdit(k);$('close').onclick=closeSheet;
-  $('veil').classList.add('on');$('edit').focus();
-}
-
-function showEdit(k){
-  const p=data[k]||{exos:''};
-  $('sheet').innerHTML=`<h2 id="sd">${dateLabel(k)}</h2><p class="sub">${data[k]?'Modifier le programme':'Nouveau programme'}</p>
-  
-  
-  <label for="f-e">Exercices</label>
-  <textarea id="f-e" placeholder="Développé couché 4x8 80 kg&#10;Dips 3x10">${esc(p.exos)}</textarea>
-  <p class="hint">Un exercice par ligne.</p>
-  <div class="row"><button class="btn main" id="ok">Enregistrer</button><button class="btn" id="no">Annuler</button>${data[k]?'<button class="btn del" id="rm">Supprimer</button>':''}</div>`;
-  $('ok').onclick=()=>{
-    const exos=$('f-e').value.trim();
-    if(!exos)delete data[k];else data[k]={exos};
-    save();render();showView(k);
-  };
-  $('no').onclick=()=>showView(k);
-  const rm=$('rm');if(rm)rm.onclick=()=>{delete data[k];save();render();showView(k)};
-  $('f-e').focus();
-}
-
-function closeSheet(){$('veil').classList.remove('on');openKey=null}
-
-$('grid').onclick=e=>{const b=e.target.closest('.cell');if(b)showView(b.dataset.k)};
-$('veil').onclick=e=>{if(e.target===$('veil'))closeSheet()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openKey)closeSheet()});
-$('prev').onclick=()=>{cur.setMonth(cur.getMonth()-1);render()};
-$('next').onclick=()=>{cur.setMonth(cur.getMonth()+1);render()};
-let dl=null;
-dl={save:async({filename,data})=>{const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}};$('exp').hidden=false;
-function wrap(x,text,maxW){const out=[];let line='';for(const w of text.split(' ')){const t=line?line+' '+w:w;if(x.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t}if(line)out.push(line);return out}
-async function exportPng(){
- if(!dl)return;
- try{await document.fonts.ready}catch(e){}
- const W=1200,pad=30,gap=8,cw=(W-pad*2-gap*4)/5,fam='Barlow,system-ui,sans-serif',LH=28;
- const first=new Date(cur.getFullYear(),cur.getMonth(),1);
- const off=(first.getDay()+6)%7;const start=new Date(first);start.setDate(off>=5?1+(7-off):1-off);
- const c=document.createElement('canvas');const x=c.getContext('2d');
- x.font='500 22px '+fam;
- const weeks=[];
- for(let w=0;w<6;w++){
-  const row=[];for(let j=0;j<5;j++){const d=new Date(start);d.setDate(start.getDate()+w*7+j);row.push(d)}
-  if(w>0&&row[0].getMonth()!==cur.getMonth())break;
-  weeks.push(row.map(d=>{const p=data[key(d)];return{d,inM:d.getMonth()===cur.getMonth(),l:p?lines(p).flatMap(s=>wrap(x,s,cw-24)):[]}}));
- }
- const heights=weeks.map(r=>Math.max(120,52+Math.max(...r.map(o=>o.l.length))*LH+16));
- const H=190+heights.reduce((a,b)=>a+b+gap,0)+pad;
- c.width=W;c.height=H;
- const rr=(X,Y,w,h)=>{x.beginPath();if(x.roundRect)x.roundRect(X,Y,w,h,10);else x.rect(X,Y,w,h)};
- x.fillStyle='#fff';x.fillRect(0,0,W,H);
- x.textBaseline='top';x.textAlign='left';x.fillStyle='#1B2127';x.font='700 56px '+fam;
- const titre=cur.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
- x.fillText(titre.charAt(0).toUpperCase()+titre.slice(1),pad,40);
- ['Lun','Mar','Mer','Jeu','Ven'].forEach((n,i)=>{const X=pad+i*(cw+gap);rr(X,130,cw,48);x.fillStyle='#1B2127';x.fill();x.fillStyle='#fff';x.font='700 28px '+fam;x.textAlign='center';x.fillText(n,X+cw/2,139);x.textAlign='left'});
- let y=190;
- weeks.forEach((r,wi)=>{
-  r.forEach((o,i)=>{const X=pad+i*(cw+gap),h=heights[wi],has=o.l.length>0;
-   rr(X,y,cw,h);x.fillStyle=has?'#E3EAFF':'#fff';x.fill();x.strokeStyle=has?'#2B59FF':'#D5DBE0';x.lineWidth=2;x.stroke();
-   x.globalAlpha=o.inM?1:.4;x.fillStyle='#1B2127';x.font='700 26px '+fam;x.fillText(String(o.d.getDate()),X+12,y+10);
-   x.font='500 22px '+fam;o.l.forEach((t,k)=>x.fillText(t,X+12,y+48+k*LH));x.globalAlpha=1});
-  y+=heights[wi]+gap;
- });
- const blob=await new Promise(r=>c.toBlob(r,'image/png'));
- if(!blob)return;
- try{await dl.save({filename:'programme-muscu-'+cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'.png',data:blob})}catch(e){}
-}
-$('exp').onclick=exportPng;
-let sx=0,sy=0;const area=document.querySelector('main');
-area.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
-area.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){cur.setMonth(cur.getMonth()+(dx<0?1:-1));render()}},{passive:true});
-render();
-</script>
+<script src="app.js"></script>
+<script data-goatcounter="https://muscu83.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
